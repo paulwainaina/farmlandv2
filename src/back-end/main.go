@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,11 +9,16 @@ import (
 	"strings"
 
 	"example.com/sessions"
+	"example.com/users"
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var (
 	userSessions *sessions.SessionsManager
+	systemUsers  *users.Users
+	db           *mongo.Database
 )
 
 func init() {
@@ -47,14 +53,27 @@ func AuthMiddleware(next http.Handler) http.Handler {
 }
 
 func main() {
-	server := fmt.Sprintf("%s:%s", os.Getenv("Server_Address"), os.Getenv("Server_Port"))
 	userSessions = sessions.NewSessionsManager()
-
 	go userSessions.ManageSession()
+
+	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", os.Getenv("Mongo_Host"), os.Getenv("Mongo_Port")))
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer client.Disconnect(context.TODO())
+
+	db = client.Database(os.Getenv("Database"))
 
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(os.Getenv("Assets")))))
 
-	err := http.ListenAndServeTLS(server, os.Getenv("Certificate"), os.Getenv("Key"), nil)
+	systemUsers = users.NewUsers(userSessions, db)
+	http.Handle("/users", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
+	http.Handle("/login", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
+	http.Handle("/password", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
+
+	server := fmt.Sprintf("%s:%s", os.Getenv("Server_Address"), os.Getenv("Server_Port"))
+	err = http.ListenAndServeTLS(server, os.Getenv("Certificate"), os.Getenv("Key"), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
