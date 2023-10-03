@@ -5,13 +5,19 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"text/template"
 
 	"github.com/joho/godotenv"
 )
 
 var (
-// backend_url = fmt.Sprintf("%s://%s:%s", os.Getenv("Mode"), os.Getenv("Backend_Server"), os.Getenv("Backend_Port"))
+	backend_url = fmt.Sprintf("%s://%s:%s", os.Getenv("Mode"), os.Getenv("Backend_Server"), os.Getenv("Backend_Port"))
+	tpl         *template.Template
 )
+
+func init() {
+	tpl = template.Must(template.ParseGlob("./templates/*.html"))
+}
 
 type Page struct {
 	Url   string
@@ -20,7 +26,11 @@ type Page struct {
 }
 
 func Loginhandler(w http.ResponseWriter, r *http.Request) {
-
+	page := &Page{Url: backend_url}
+	err := tpl.ExecuteTemplate(w, "login.html", page)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 func Indexhandler(w http.ResponseWriter, r *http.Request) {
