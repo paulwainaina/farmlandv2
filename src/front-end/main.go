@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	backend_url = fmt.Sprintf("%s://%s:%s", os.Getenv("Mode"), os.Getenv("Backend_Server"), os.Getenv("Backend_Port"))
+	backend_url string
 	tpl         *template.Template
 )
 
@@ -26,7 +26,7 @@ type Page struct {
 }
 
 func Loginhandler(w http.ResponseWriter, r *http.Request) {
-	page := &Page{Url: backend_url}
+	page := Page{Url: backend_url}
 	err := tpl.ExecuteTemplate(w, "login.html", page)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -53,6 +53,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 func main() {
 	server := fmt.Sprintf("%s:%s", os.Getenv("Server_Address"), os.Getenv("Server_Port"))
+	backend_url = fmt.Sprintf("%s://%s:%s", os.Getenv("Mode"), os.Getenv("Backend_Server"), os.Getenv("Backend_Port"))
 
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(os.Getenv("Assets")))))
 

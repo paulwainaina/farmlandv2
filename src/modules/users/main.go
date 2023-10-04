@@ -194,7 +194,7 @@ func (users *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewEncoder(w).Encode("")
 		return
-	} else if r.URL.Path == "/login" {
+	} else if r.URL.Path == "/signin" {
 		var user User
 		err := json.NewDecoder(r.Body).Decode(&user)
 		if err != nil {

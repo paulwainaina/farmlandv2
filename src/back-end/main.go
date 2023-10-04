@@ -31,7 +31,13 @@ func init() {
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Access-Control-Allow-Origin", fmt.Sprintf("%s://%s:%s", os.Getenv("Mode"), os.Getenv("Frontend_Server"), os.Getenv("Frontend_Port")))
-		if !strings.EqualFold(r.URL.Path, "/login") || !strings.EqualFold(r.URL.Path, "/signup") {
+		if r.Method == http.MethodOptions {
+			w.Header().Add("Access-Control-Allow-Headers", "POST,GET,PUT,DELETE")
+			w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		if !strings.EqualFold(r.URL.Path, "/signin") && !strings.EqualFold(r.URL.Path, "/signup") {
 			session, err := r.Cookie("session")
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
@@ -69,7 +75,7 @@ func main() {
 
 	systemUsers = users.NewUsers(userSessions, db)
 	http.Handle("/users", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
-	http.Handle("/login", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
+	http.Handle("/signin", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
 	http.Handle("/password", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
 
 	server := fmt.Sprintf("%s:%s", os.Getenv("Server_Address"), os.Getenv("Server_Port"))
