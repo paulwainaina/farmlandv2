@@ -33,6 +33,14 @@ func Loginhandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func Signuphandler(w http.ResponseWriter, r *http.Request) {
+	page := Page{Url: backend_url}
+	err := tpl.ExecuteTemplate(w, "signup.html", page)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
 func Indexhandler(w http.ResponseWriter, r *http.Request) {
 
 }
@@ -58,6 +66,7 @@ func main() {
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(os.Getenv("Assets")))))
 
 	http.HandleFunc("/login", Loginhandler)
+	http.HandleFunc("/signup", Signuphandler)
 
 	http.Handle("/", AuthMiddleware(http.HandlerFunc(Indexhandler)))
 

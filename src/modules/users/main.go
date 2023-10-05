@@ -171,7 +171,7 @@ func (users *Users) LoginUser(usr User) (*User, error) {
 			return m, nil
 		}
 	}
-	return &User{}, fmt.Errorf("wrong credentials")
+	return &User{}, fmt.Errorf("wrong credentials %s", usr.Email)
 }
 
 func (users *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -207,8 +207,8 @@ func (users *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		sess := users.authSession.CreateNewSession(u.Email)
-		if err != nil {
-			json.NewEncoder(w).Encode(struct{ Error string }{Error: err.Error()})
+		if sess == nil {
+			json.NewEncoder(w).Encode(struct{ Error string }{Error: "internal error sessions"})
 			return
 		}
 		http.SetCookie(w, &sess.Cookie)

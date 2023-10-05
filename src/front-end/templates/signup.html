@@ -8,26 +8,46 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
         <title>FarmLand Login</title>
     </head>
+    <style>
+        .circle{
+            height: 50px;
+            width: 50px;
+            border: 1px solid;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .circle.active{
+            transition-delay: 100ms;
+            border-color:  black;
+            background-color: rgb(4, 155, 4);
+            color: white;
+        }
+    </style>
     <body>
-        <div class="row" style="height:100vh;width:100%;">
-            <div class="d-flex flex-row justify-content-center align-items-center flex-wrap">
-                <div class="d-flex flex-column">
-                    <div class="card" style="width: 30rem; padding:20px;margin:20px;">
-                        <h5 class="card-title">Sign Up</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">Welcome to farmland.</h6>
-                        <div class="card-body">
-                            <form id="signup">
-                                <div class="mb-3">
+        <div class="row"style="height:100vh;width:100%;">                                
+            <div class="d-flex flex-column justify-content-center align-items-center flex-wrap" > 
+                <div class="d-flex flex-row justify-content-between flex-wrap" style="width:80%">                           
+                    <span class="circle active" id="s1">1</span>
+                    <span class="circle" id="s2">2</span> 
+                </div> 
+                <div class="card" style="width: 30rem; padding:20px;margin:20px;" id="stepone">
+                    <h5 class="card-title">Sign Up</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Welcome to farmland.</h6>
+                    <div class="card-body">
+                        <form id="signup">
+                            <div class="mb-3">
                                     <label for="userEmail" class="form-label">Email address</label>
                                     <input type="email" class="form-control" id="userEmail" placeholder="name@example.com" required>
                                     <div id="emailfeedback" class="invalid-feedback"> </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="userName" class="form-label">Name</label>
-                                    <input type="text" class="form-control" id="userName" placeholder="john doe" required>
-                                    <div id="namefeedback" class="invalid-feedback"> </div>
-                                </div>
-                                <div class="mb-3">
+                            </div>
+                            <div class="mb-3">
+                                <label for="userName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="userName" placeholder="john doe" required>
+                                <div id="namefeedback" class="invalid-feedback"> </div>
+                            </div>
+                            <div class="mb-3">
                                     <label for="userPassword" class="form-label">Password</label>
                                     <div class="d-flex flex-row justify-content-center align-items-center flex-wrap">
                                         <div class="col-mb-11 flex-fill">
@@ -45,26 +65,294 @@
                                         a special character eg !,# ,
                                         both upper case and lower letters.</p>
                                     </div>                                                                      
-                                </div>
-                                <div class="mb-3">
+                            </div>
+                            <div class="mb-3">
                                     <label for="confirmPassword" class="form-label">Confirm password</label>
                                     <input type="password" class="form-control" id="confirmPassword" required>
                                     <div id="confirmpasswordfeedback" class="invalid-feedback"> </div>                                                                    
-                                </div>
-                                <div class="mb-3 d-flex flex-row justify-content-around align-items-center flex-wrap">
-                                    <button type="submit" class="btn btn-primary">Sign up</button>
-                                    <button type="button" class="btn btn-secondary" onclick="signin()">Sign in</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div> 
-                    <div id="errormessage" role="alert" style="margin: 20px;">
-                    </div> 
-                </div>     
-                <div hidden>
-                    
+                            </div>
+                            <div class="mb-3 d-flex flex-row justify-content-around align-items-center flex-wrap">
+                                <button type="submit" class="btn btn-primary">Sign up</button>
+                                <button type="button" class="btn btn-secondary" onclick="signin()">Sign in</button>
+                            </div>
+                            <div class="card-footer bg-transparent d-flex flex-row justify-content-end align-items-center">
+                                <button type="button" class="btn btn-link" onclick="activateaccount()">Already have an account? Activate it</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </div>
+                <div class="card" style="width: 30rem; padding:20px;margin:20px;"  id="steptwo" hidden>
+                    <h5 class="card-title">Confirm Code</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Enter the code sent to your email to activate the account.</h6>
+                    <div class="card-body">
+                        <form id="confirm">
+                            <div class="mb-3">
+                                <label for="userEmailConfirm" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="userEmailConfirm" placeholder="name@example.com" required>
+                                <div id="emailfeedbackconfirm" class="invalid-feedback"> </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label for="userCode" class="form-label">Code</label>
+                                    <input type="text" class="form-control" id="userCode" placeholder="12345" required>
+                                    <div id="codefeedback" class="invalid-feedback"> </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="request" class="form-label">Resend Code</label>
+                                    <button type="button" class="btn btn-light mb-3" id="request" >Resend</button>
+                                </div>
+                            </div>
+                            <div class="mb-3 d-flex flex-row justify-content-around align-items-center flex-wrap">
+                                <button type="submit" class="btn btn-primary">Confirm</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div id="errormessage" role="alert" style="width: 30rem;margin: 20px;">
+                </div> 
+            </div> 
         </div>
     </body>
 </html>
+<script>
+    let errormessage=document.getElementById("errormessage")
+    let form=document.getElementById("signup")
+    let formconfirm=document.getElementById("confirm")
+    let password=document.getElementById("userPassword")
+    let confirmpassword=document.getElementById("confirmPassword")
+    let email=document.getElementById("userEmail")
+    let name=document.getElementById("userName")
+    let viewpassword=document.getElementById("viewpassword")
+    let confirmcode=document.getElementById("userCode")
+    let confirmemail=document.getElementById("userEmailConfirm")
+
+    function activateaccount(){
+        document.getElementById("stepone").hidden=true
+        document.getElementById("steptwo").hidden=false
+        document.getElementById("s2").classList.add("active")
+    }
+
+    document.getElementById("request").addEventListener('click',()=>{
+        let text=document.getElementById("emailfeedbackconfirm")
+        if( confirmemail.value===""){
+            text.innerText="email is required"
+            confirmemail.className="form-control is-invalid"
+            return
+        }
+        const data=JSON.stringify({Email:event.target.userEmailConfirm})
+        if(data!=="undefined"){
+           fetch("{{.Url}}"+"/request",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+            },
+            body:data,
+           }).then(response=> {
+            return response.json()
+            })
+           .then(data=>{
+                if(data.hasOwnProperty("Error")){
+                    errormessage.className="alert alert-warning"
+                    errormessage.innerText=data.Error
+                }else{
+                    errormessage.className="alert alert-success"
+                    errormessage.innerText="Email sent. Check your email and use the code to activate your account"                   
+                }
+           })
+           .catch(e=>{
+                errormessage.className="alert alert-danger"
+                errormessage.innerText=e.message
+           })
+           .finally(()=>{
+             setTimeout(()=>{
+                errormessage.className=""
+                errormessage.innerText=""
+             },5000)
+           }) 
+        }  
+    })
+
+    confirmcode.addEventListener('keyup',()=>{
+        let text=document.getElementById("codefeedback")
+        if(confirmcode.value===""){
+            text.innerText="code is required"
+            confirmcode.className="form-control is-invalid"
+        }else{
+            confirmcode.className="form-control is-valid"
+        }
+    })
+
+    name.addEventListener('keyup',()=>{
+        let text=document.getElementById("namefeedback")
+        if(name.value===""){
+            text.innerText="name is required"
+            name.className="form-control is-invalid"
+        }else{
+            name.className="form-control is-valid"
+        }
+    })
+
+    confirmemail.addEventListener('keyup',()=>{
+        let text=document.getElementById("emailfeedbackconfirm")
+        if(confirmemail.value===""){
+            text.innerText="email is required"
+            confirmemail.className="form-control is-invalid"
+        }
+        else if(!confirmemail.value.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g)){
+            text.innerText="invalid email format"
+            confirmemail.className="form-control is-invalid"
+        }else{
+            confirmemail.className="form-control is-valid"
+        }
+    })
+
+    formconfirm.addEventListener('submit',(e)=>{
+        event.preventDefault()
+        event.stopPropagation()
+        if(confirmcode.classList.contains("is-invalid")|| confirmemail.classList.contains("is-invalid")){
+            return
+        }        
+        const data=JSON.stringify({Email:event.target.userEmailConfirm.value,Code:event.target.userCode.value})
+        if(data!=="undefined"){
+           fetch("{{.Url}}"+"/confirm",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+            },
+            body:data,
+           }).then(response=> {
+            return response.json()
+            })
+           .then(data=>{
+                if(data.hasOwnProperty("Error")){
+                    errormessage.className="alert alert-warning"
+                    errormessage.innerText=data.Error
+                }else{
+                    errormessage.className="alert alert-success"
+                    errormessage.innerText="Account activated"
+                    window.location.replace("/login")
+                }
+           })
+           .catch(e=>{
+                errormessage.className="alert alert-danger"
+                errormessage.innerText=e.message
+           })
+           .finally(()=>{
+             setTimeout(()=>{
+                errormessage.className=""
+                errormessage.innerText=""
+             },5000)
+           }) 
+        }  
+    })
+    
+    viewpassword.addEventListener("click",()=>{
+        if(password.type==="password"){
+            viewpassword.src="../assets/Icons/icons8-eye-32.png"
+            password.type="text"
+        }else{
+            password.type="password"
+            viewpassword.src="../assets/Icons/icons8-closed-eye-32.png"
+        }
+    })
+
+    confirmpassword.addEventListener("keyup",()=>{
+        let text=document.getElementById("confirmpasswordfeedback")
+        if(password.value!==confirmpassword.value){
+            text.innerText="passwords do not match"
+            confirmpassword.className="form-control is-invalid"
+        }else{
+            confirmpassword.className="form-control is-valid"
+        }
+    })
+
+    email.addEventListener("keyup",()=>{
+        let text=document.getElementById("emailfeedback")
+        if(email.value===""){
+            text.innerText="email is required"
+            email.className="form-control is-invalid"
+        }
+        else if(!email.value.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g)){
+            text.innerText="invalid email format"
+            email.className="form-control is-invalid"
+        }else{
+            email.className="form-control is-valid"
+        }
+    })
+
+    password.addEventListener("keyup",()=>{
+        let text=document.getElementById("passwordfeedback")
+        if(password.value===""){
+            text.innerText="password is required"
+            password.className="form-control is-invalid"
+        }
+        else if(!password.value.match(/[a-z]/g)) {
+            text.innerText="password must have a lower case letter"
+            password.className="form-control is-invalid"
+        }
+        else if(!password.value.match(/[A-Z]/g)) {
+            text.innerText="password must have an upper case letter"
+            password.className="form-control is-invalid"
+        }
+        else if(!password.value.match(/[0-9]/g)) {
+            text.innerText="password must have a number"
+            password.className="form-control is-invalid"
+        }
+        else if(!password.value.match(/[^A-Za-z0-9]/g)){
+            text.innerText="password must have a special character"
+            password.className="form-control is-invalid"
+        }
+        else if(password.value.length < 8) {
+            text.innerText="password must be eight or more characters"
+            password.className="form-control is-invalid"
+        }else{
+            password.className="form-control is-valid"
+        }
+    })
+
+    form.addEventListener("submit",(event)=>{
+        event.preventDefault()
+        event.stopPropagation()
+        if(password.classList.contains("is-invalid")|| email.classList.contains("is-invalid")||
+        confirmpassword.classList.contains("is-invalid")|| name.classList.contains("is-invalid")){
+            return
+        }        
+        const data=JSON.stringify({Email:event.target.userEmail.value,Password:event.target.userPassword.value,Name:event.target.userName.value})
+        if(data!=="undefined"){
+           fetch("{{.Url}}"+"/users",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+            },
+            body:data,
+           }).then(response=> {
+            return response.json()
+            })
+           .then(data=>{
+                if(data.hasOwnProperty("Error")){
+                    errormessage.className="alert alert-warning"
+                    errormessage.innerText=data.Error
+                }else{
+                    errormessage.className="alert alert-success"
+                    errormessage.innerText="user created successfully"
+                    window.location.replace("/login")
+                }
+           })
+           .catch(e=>{
+                errormessage.className="alert alert-danger"
+                errormessage.innerText=e.message
+           })
+           .finally(()=>{
+             setTimeout(()=>{
+                errormessage.className=""
+                errormessage.innerText=""
+             },5000)
+           }) 
+        }  
+    })
+
+    function signin(){
+        window.location.href = "/signin"
+    }
+
+</script>

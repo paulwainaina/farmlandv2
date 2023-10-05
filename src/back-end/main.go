@@ -37,7 +37,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		if !strings.EqualFold(r.URL.Path, "/signin") && !strings.EqualFold(r.URL.Path, "/signup") {
+		if !strings.EqualFold(r.URL.Path, "/signin") && !strings.EqualFold(r.URL.Path, "/signup") && !(strings.EqualFold(r.URL.Path, "/users") && r.Method == http.MethodPost) {
 			session, err := r.Cookie("session")
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
