@@ -174,6 +174,28 @@ func (users *Users) LoginUser(usr User) (*User, error) {
 	return &User{}, fmt.Errorf("wrong credentials %s", usr.Email)
 }
 
+func (users *Users) ActivateUser(email, code string) (*User, error) {
+	for _, m := range users.systemUsers {
+		if strings.EqualFold(m.Email, email) {
+			if strings.EqualFold(m.Code, code) {
+				m.Active = true
+				return m, nil
+			}
+			return &User{}, fmt.Errorf("invalid code entered")
+		}
+	}
+	return &User{}, fmt.Errorf("user does not exist")
+}
+
+func (users *Users) ResendUserCode(email string) error {
+	for _, m := range users.systemUsers {
+		if strings.EqualFold(m.Email, email) {
+			return nil
+		}
+	}
+	return fmt.Errorf("user does not exist")
+}
+
 func (users *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/password" {
 		var user struct {
@@ -214,6 +236,38 @@ func (users *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &sess.Cookie)
 		http.SetCookie(w, &http.Cookie{Name: "username", Value: u.Email})
 		json.NewEncoder(w).Encode(u)
+		return
+	} else if r.URL.Path == "/confirm" {
+		var user struct {
+			Email string
+			Code  string
+		}
+		err := json.NewDecoder(r.Body).Decode(&user)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		u, err := users.ActivateUser(user.Email, user.Code)
+		if err != nil {
+			json.NewEncoder(w).Encode(struct{ Error string }{Error: err.Error()})
+			return
+		}
+		json.NewEncoder(w).Encode(u)
+		return
+	} else if r.URL.Path == "/request" {
+		var user struct {
+			Email string
+		}
+		err := json.NewDecoder(r.Body).Decode(&user)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		err = users.ResendUserCode(user.Email)
+		if err != nil {
+			json.NewEncoder(w).Encode(struct{ Error string }{Error: err.Error()})
+			return
+		}
 		return
 	}
 	if r.URL.Path == "/users" {

@@ -77,6 +77,8 @@ func main() {
 	http.Handle("/users", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
 	http.Handle("/signin", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
 	http.Handle("/password", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
+	http.Handle("/confirm", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
+	http.Handle("/request", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
 
 	server := fmt.Sprintf("%s:%s", os.Getenv("Server_Address"), os.Getenv("Server_Port"))
 	err = http.ListenAndServeTLS(server, os.Getenv("Certificate"), os.Getenv("Key"), nil)
