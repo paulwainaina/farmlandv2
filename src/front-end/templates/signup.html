@@ -28,7 +28,7 @@
     <body>
         <div class="row"style="height:100vh;width:100%;">                                
             <div class="d-flex flex-column justify-content-center align-items-center flex-wrap" > 
-                <div class="d-flex flex-row justify-content-between flex-wrap" style="width:80%">                           
+                <div class="d-flex flex-row justify-content-evenly flex-wrap" style="width:80%">                           
                     <span class="circle active" id="s1">1</span>
                     <span class="circle" id="s2">2</span> 
                 </div> 
@@ -139,7 +139,7 @@
             confirmemail.className="form-control is-invalid"
             return
         }
-        const data=JSON.stringify({Email:event.target.userEmailConfirm})
+        const data=JSON.stringify({Email:confirmemail.value})
         if(data!=="undefined"){
            fetch("{{.Url}}"+"/request",{
             method:"POST",
@@ -213,6 +213,7 @@
             return
         }        
         const data=JSON.stringify({Email:event.target.userEmailConfirm.value,Code:event.target.userCode.value})
+        console.log(data)
         if(data!=="undefined"){
            fetch("{{.Url}}"+"/confirm",{
             method:"POST",
