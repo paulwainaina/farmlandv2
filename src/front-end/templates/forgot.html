@@ -6,27 +6,28 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-        <title>FarmLand Login</title>
+        <title>FarmLand Sign Up</title>
         <link rel="icon" type="image/x-icon" href="../assets/favicon.png">
     </head>
     <body>
         <div class="row" style="height:100vh;width:100%;">
-            <div class="col-md-6 d-flex flex-row justify-content-center align-items-center flex-wrap" >
-                <img src="../assets/dairy.png" style="object-fit: cover;height: 100%;" alter="farmland dairy"/>
-            </div>
-            <div class="col-md-6 d-flex flex-row justify-content-center align-items-center flex-wrap">
-                <div class="d-flex flex-column">
-                    <div class="card" style="width: 30rem; padding:20px;margin:20px;">
-                        <h5 class="card-title">Sign in</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">Welcome back to farmland.</h6>
-                        <div class="card-body">
-                            <form id="signin">
-                                <div class="mb-3">
-                                    <label for="userEmail" class="form-label">Email address</label>
-                                    <input type="email" class="form-control" id="userEmail" placeholder="name@example.com" required>
-                                    <div id="emailfeedback" class="invalid-feedback"> </div>
-                                </div>
-                                <div class="mb-3">
+            <div class="d-flex flex-column justify-content-center align-items-center flex-wrap">
+                <div class="card" style="width: 30rem; padding:20px;margin:20px;" id="stepone">
+                    <h5 class="card-title">Reset your password</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Ensure that you have the activation code. If not go to signup page and request for another code.</h6>
+                    <div class="card-body">
+                        <form id="forgot">
+                            <div class="mb-3">
+                                <label for="userEmail" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="userEmail" placeholder="name@example.com" required>
+                                <div id="emailfeedback" class="invalid-feedback"> </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="userCode" class="form-label">Code</label>
+                                <input type="text" class="form-control" id="userCode" placeholder="1234" required>
+                                <div id="codefeedback" class="invalid-feedback"> </div>
+                            </div>
+                            <div class="mb-3">
                                     <label for="userPassword" class="form-label">Password</label>
                                     <div class="d-flex flex-row justify-content-center align-items-center flex-wrap">
                                         <div class="col-mb-11 flex-fill">
@@ -44,41 +45,29 @@
                                         a special character eg !,# ,
                                         both upper case and lower letters.</p>
                                     </div>                                                                      
-                                </div>
-                                <div class="mb-3 d-flex flex-row justify-content-around align-items-center flex-wrap">
-                                    <button type="submit" class="btn btn-primary">Sign in</button>
-                                    <button type="button" class="btn btn-secondary" onclick="signUp()">Sign up</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="card-footer bg-transparent d-flex flex-row justify-content-end align-items-center">
-                            <button type="button" class="btn btn-link" onclick="forgotPassword()">Forgot your password </button>
-                        </div>
-                    </div> 
-                    <div id="errormessage" role="alert" style="margin: 20px;">
-                    </div> 
-                </div>                
+                            </div>
+                            <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">Confirm password</label>
+                                    <input type="password" class="form-control" id="confirmPassword" required>
+                                    <div id="confirmpasswordfeedback" class="invalid-feedback"> </div>                                                                    
+                            </div>
+                            <div class="mb-3 d-flex flex-row justify-content-around align-items-center flex-wrap">
+                                <button type="submit" class="btn btn-primary">Change password</button>
+                                <button type="button" class="btn btn-secondary" onclick="signin()">Sign in</button>
+                            </div>
+                        </form>
+                        
+                    </div>
+                </div>
+                <div id="errormessage" role="alert" style="width: 30rem;margin: 20px;">
+                </div>             
             </div>
         </div>
     </body>
 </html>
 <script>
     let errormessage=document.getElementById("errormessage")
-    let form=document.getElementById("signin")
-    let password=document.getElementById("userPassword")
     let email=document.getElementById("userEmail")
-    let viewpassword=document.getElementById("viewpassword")
-    
-    viewpassword.addEventListener("click",()=>{
-        if(password.type==="password"){
-            viewpassword.src="../assets/Icons/icons8-eye-32.png"
-            password.type="text"
-        }else{
-            password.type="password"
-            viewpassword.src="../assets/Icons/icons8-closed-eye-32.png"
-        }
-    })
-
     email.addEventListener("keyup",()=>{
         let text=document.getElementById("emailfeedback")
         if(email.value===""){
@@ -93,6 +82,27 @@
         }
     })
 
+    let code=document.getElementById("userCode")
+    code.addEventListener('keyup',()=>{
+        let text=document.getElementById("codefeedback")
+        if(code.value===""){
+            text.innerText="code is required"
+            code.className="form-control is-invalid"
+        }else{
+            code.className="form-control is-valid"
+        }
+    })
+    let viewpassword=document.getElementById("viewpassword")
+    viewpassword.addEventListener("click",()=>{
+        if(password.type==="password"){
+            viewpassword.src="../assets/Icons/icons8-eye-32.png"
+            password.type="text"
+        }else{
+            password.type="password"
+            viewpassword.src="../assets/Icons/icons8-closed-eye-32.png"
+        }
+    })
+    let password=document.getElementById("userPassword")
     password.addEventListener("keyup",()=>{
         let text=document.getElementById("passwordfeedback")
         if(password.value===""){
@@ -122,23 +132,36 @@
             password.className="form-control is-valid"
         }
     })
-
+    let confirmpassword=document.getElementById("confirmPassword")
+    confirmpassword.addEventListener("keyup",()=>{
+        let text=document.getElementById("confirmpasswordfeedback")
+        if(password.value!==confirmpassword.value){
+            text.innerText="passwords do not match"
+            confirmpassword.className="form-control is-invalid"
+        }else{
+            confirmpassword.className="form-control is-valid"
+        }
+    })
+    function signin(){
+        window.location.href = "/signin"
+    }
+    let form=document.getElementById("forgot")
     form.addEventListener("submit",(event)=>{
         event.preventDefault()
         event.stopPropagation()
-        if(password.classList.contains("is-invalid")|| email.classList.contains("is-invalid")){
+        if(password.classList.contains("is-invalid")|| code.classList.contains("is-invalid")||
+        confirmpassword.classList.contains("is-invalid")|| email.classList.contains("is-invalid")){
             return
         }        
-        const data=JSON.stringify({Email:event.target.userEmail.value,Password:event.target.userPassword.value})
+        const data=JSON.stringify({Email:event.target.userEmail.value,Password:event.target.userPassword.value,Code:event.target.userCode.value})
         if(data!=="undefined"){
-           fetch("{{.Url}}"+"/signin",{
+           fetch("{{.Url}}"+"/forgot",{
             method:"POST",
             headers:{
                 "Content-Type":"application/json",
             },
             body:data,
            }).then(response=> {
-            console.log(response)
             return response.json()
             })
            .then(data=>{
@@ -147,8 +170,8 @@
                     errormessage.innerText=data.Error
                 }else{
                     errormessage.className="alert alert-success"
-                    errormessage.innerText="user authenticated successfully"
-                    window.location.replace("/")
+                    errormessage.innerText="user password changed"
+                    window.location.replace("/login")
                 }
            })
            .catch(e=>{
@@ -163,13 +186,4 @@
            }) 
         }  
     })
-
-    function signUp(){
-        window.location.href = "/signup"
-    }
-
-    function forgotPassword(){
-        window.location.href = "/forgot"
-    }
-
 </script>

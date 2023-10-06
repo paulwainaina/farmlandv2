@@ -1,13 +1,18 @@
 package users
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
+	"net/smtp"
 	"os"
+	"strconv"
 	"strings"
+	"text/template"
 
 	"example.com/sessions"
 	"go.mongodb.org/mongo-driver/bson"
@@ -59,6 +64,20 @@ func NewUsers(auth *sessions.SessionsManager, db *mongo.Database) *Users {
 	return &Users{systemUsers: users, authSession: auth, db: db}
 }
 
+func SendEmail(result chan error, email, code string) {
+	t, err := template.ParseFiles("../modules/templates/email.html")
+	if err != nil {
+		result <- err
+		return
+	}
+	var body bytes.Buffer
+	body.Write([]byte(fmt.Sprintf("Subject: %s \n%s\n\n", "Activation code", "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n")))
+	t.Execute(&body, struct{ Code string }{Code: code})
+	auth := smtp.PlainAuth("", os.Getenv("EMAIL_FROM"), os.Getenv("EMAIL_PASSWORD"), os.Getenv("EMAIL_HOST"))
+	err = smtp.SendMail(os.Getenv("EMAIL_HOST_ADDR"), auth, os.Getenv("EMAIL_FROM"), []string{email}, body.Bytes())
+	result <- err
+}
+
 func (users *Users) AddUser(usr User) (*User, error) {
 	for _, m := range users.systemUsers {
 		if strings.EqualFold(m.Email, usr.Email) {
@@ -74,6 +93,14 @@ func (users *Users) AddUser(usr User) (*User, error) {
 	_, err = col.InsertOne(context.TODO(), usr)
 	if err != nil {
 		return &User{}, err
+	}
+	code := strconv.Itoa(rand.Intn(99999 - 10000))
+	usr.Code = code
+	result := make(chan error)
+	go SendEmail(result, usr.Email, code)
+	err = <-result
+	if err != nil {
+		return &User{}, fmt.Errorf("internal server error sending code")
 	}
 	users.systemUsers = append(users.systemUsers, &usr)
 	return &usr, nil
@@ -118,6 +145,7 @@ func (users *Users) UpdateUser(usr User) (*User, error) {
 					"Name":     usr.Name,
 					"Active":   usr.Active,
 					"Passport": usr.Passport,
+					"Code":     usr.Code,
 				}})
 			if err != nil {
 				return &User{}, err
@@ -159,6 +187,31 @@ func (users *Users) ChangePassword(email, code, current, new string) error {
 	return fmt.Errorf("user %s does not exist", email)
 }
 
+func (users *Users) ForgotPassword(email, code, password string) error {
+	for _, u := range users.systemUsers {
+		if strings.EqualFold(u.Email, email) {
+			if !strings.EqualFold(code, u.Code) {
+				return fmt.Errorf("wrong code provided")
+			}
+			password, err := HashPassword(password)
+			if err != nil {
+				return fmt.Errorf("internal server error hashing")
+			}
+			col := users.db.Collection(userCollection)
+			_, err = col.UpdateOne(context.TODO(), bson.M{"Email": u.Email},
+				bson.M{"$set": bson.M{
+					"Password": password,
+				}})
+			if err != nil {
+				return fmt.Errorf("internal server error")
+			}
+			u.Password = password
+			return nil
+		}
+	}
+	return fmt.Errorf("user %s does not exist", email)
+}
+
 func (users *Users) LoginUser(usr User) (*User, error) {
 	for _, m := range users.systemUsers {
 		if strings.EqualFold(m.Email, usr.Email) {
@@ -179,7 +232,8 @@ func (users *Users) ActivateUser(email, code string) (*User, error) {
 		if strings.EqualFold(m.Email, email) {
 			if strings.EqualFold(m.Code, code) {
 				m.Active = true
-				return m, nil
+				_, err := users.UpdateUser(*m)
+				return m, err
 			}
 			return &User{}, fmt.Errorf("invalid code entered")
 		}
@@ -190,6 +244,18 @@ func (users *Users) ActivateUser(email, code string) (*User, error) {
 func (users *Users) ResendUserCode(email string) error {
 	for _, m := range users.systemUsers {
 		if strings.EqualFold(m.Email, email) {
+			code := strconv.Itoa(rand.Intn(99999 - 10000))
+			m.Code = code
+			_, err := users.UpdateUser(*m)
+			if err != nil {
+				return err
+			}
+			result := make(chan error)
+			go SendEmail(result, email, code)
+			err = <-result
+			if err != nil {
+				return fmt.Errorf("internal server error sending code")
+			}
 			return nil
 		}
 	}
@@ -197,9 +263,27 @@ func (users *Users) ResendUserCode(email string) error {
 }
 
 func (users *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/password" {
+	if r.URL.Path == "/forgot" {
 		var user struct {
-			Email   string
+			Email    string `bson:"Email"`
+			Password string `bson:"Password"`
+			Code     string `bson:"Code"`
+		}
+		err := json.NewDecoder(r.Body).Decode(&user)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		err = users.ForgotPassword(user.Email, user.Code, user.Password)
+		if err != nil {
+			json.NewEncoder(w).Encode(struct{ Error string }{Error: err.Error()})
+			return
+		}
+		json.NewEncoder(w).Encode(struct{}{})
+		return
+	} else if r.URL.Path == "/password" {
+		var user struct {
+			Email   string `bson:"Email"`
 			Current string
 			New     string
 			Code    string
@@ -214,7 +298,7 @@ func (users *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(struct{ Error string }{Error: err.Error()})
 			return
 		}
-		json.NewEncoder(w).Encode("")
+		json.NewEncoder(w).Encode(struct{}{})
 		return
 	} else if r.URL.Path == "/signin" {
 		var user User
@@ -239,8 +323,8 @@ func (users *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if r.URL.Path == "/confirm" {
 		var user struct {
-			Email string
-			Code  string
+			Email string `bson:"Email"`
+			Code  string `bson:"Code"`
 		}
 		err := json.NewDecoder(r.Body).Decode(&user)
 		if err != nil {
@@ -256,7 +340,7 @@ func (users *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if r.URL.Path == "/request" {
 		var user struct {
-			Email string
+			Email string `bson:"Email"`
 		}
 		err := json.NewDecoder(r.Body).Decode(&user)
 		if err != nil {
@@ -268,6 +352,7 @@ func (users *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(struct{ Error string }{Error: err.Error()})
 			return
 		}
+		json.NewEncoder(w).Encode(struct{}{})
 		return
 	}
 	if r.URL.Path == "/users" {

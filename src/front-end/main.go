@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -41,8 +42,20 @@ func Signuphandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Indexhandler(w http.ResponseWriter, r *http.Request) {
+func Forgothandler(w http.ResponseWriter, r *http.Request) {
+	page := Page{Url: backend_url}
+	err := tpl.ExecuteTemplate(w, "forgot.html", page)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
 
+func Indexhandler(w http.ResponseWriter, r *http.Request) {
+	page := Page{Url: backend_url, Title: "Home"}
+	err := tpl.ExecuteTemplate(w, "index.html", page)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 func init() {
@@ -54,7 +67,20 @@ func init() {
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
+		session, err := r.Cookie("session")
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+			return
+		}
+		if session.Expires.Before(time.Now()) {
+			http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+			return
+		}
+		_, err = r.Cookie("username")
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }
@@ -67,7 +93,7 @@ func main() {
 
 	http.HandleFunc("/login", Loginhandler)
 	http.HandleFunc("/signup", Signuphandler)
-
+	http.HandleFunc("/forgot", Forgothandler)
 	http.Handle("/", AuthMiddleware(http.HandlerFunc(Indexhandler)))
 
 	err := http.ListenAndServeTLS(server, os.Getenv("Certificate"), os.Getenv("Key"), nil)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -37,20 +38,23 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		if !strings.EqualFold(r.URL.Path, "/signin") && !strings.EqualFold(r.URL.Path, "/signup") && !(strings.EqualFold(r.URL.Path, "/users") && r.Method == http.MethodPost) {
+		if !strings.EqualFold(r.URL.Path, "/forgot") && !strings.EqualFold(r.URL.Path, "/confirm") && !strings.EqualFold(r.URL.Path, "/request") && !strings.EqualFold(r.URL.Path, "/signin") && !strings.EqualFold(r.URL.Path, "/signup") && !(strings.EqualFold(r.URL.Path, "/users") && r.Method == http.MethodPost) {
 			session, err := r.Cookie("session")
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(struct{}{})
 				return
 			}
 			username, err := r.Cookie("username")
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(struct{}{})
 				return
 			}
 			found, _ := userSessions.GetSession(username.Value, session.Value)
 			if !found {
 				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(struct{}{})
 				return
 			}
 		}
@@ -79,6 +83,7 @@ func main() {
 	http.Handle("/password", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
 	http.Handle("/confirm", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
 	http.Handle("/request", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
+	http.Handle("/forgot", AuthMiddleware(http.HandlerFunc(systemUsers.ServeHTTP)))
 
 	server := fmt.Sprintf("%s:%s", os.Getenv("Server_Address"), os.Getenv("Server_Port"))
 	err = http.ListenAndServeTLS(server, os.Getenv("Certificate"), os.Getenv("Key"), nil)
