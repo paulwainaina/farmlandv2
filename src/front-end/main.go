@@ -73,6 +73,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		if session.Expires.Before(time.Now()) {
+			fmt.Println(session.Expires, time.Now())
 			http.Redirect(w, r, "/login", http.StatusMovedPermanently)
 			return
 		}
