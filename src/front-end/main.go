@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -66,12 +67,21 @@ func init() {
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("username")
+		_, err := r.Cookie("username")
 		if err != nil {
 			http.Redirect(w, r, "/login", http.StatusMovedPermanently)
 			return
 		}
-		fmt.Println(cookie.Expires, cookie.MaxAge)
+		cookie, err := r.Cookie("expire")
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+			return
+		}
+		t, err := time.Parse(time.RFC3339, cookie.Value)
+		if err != nil || t.Before(time.Now()) {
+			http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }
